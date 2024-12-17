@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RiskMate</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>RiskMate</h1>
+        <p>Risk Assessment made easy.</p>
+        <div class="logcont">
+            <img src="/static/R_SK-removebg-preview.png" alt="RiskMate Logo" class="logor" height="200px" width="200px">
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Fraud Detection Section -->
+        <section class="form-section">
+            <h2>Analyze Transaction</h2>
+            <form id="fraudForm">
+                <label for="fraud-input">Transaction Details (JSON format):</label>
+                <textarea id="fraud-input" name="fraud-input" placeholder='{
+                    "V1": -1.359,
+                    "V2": -0.072,
+                    "V3": 2.536,
+                    ...
+                    "norm_amount": 0.5
+                }'></textarea>
+                <button type="submit">Analyze</button>
+            </form>
+            <div id="fraud-result" class="result"></div>
+        </section>
+
+        <!-- Credit Scoring Section -->
+        <section class="form-section">
+            <h2>Credit Score</h2>
+            <form id="creditForm">
+                <label for="credit-input">Customer Credit Details (JSON format):</label>
+                <textarea id="credit-input" name="credit-input" placeholder='{
+                    "transaction_frequency": 50,
+                    "avg_transaction_amount": 150,
+                    "fraud_history": 0.2
+                }'></textarea>
+                <button type="submit">Get Credit Score</button>
+            </form>
+            <div id="credit-result" class="result"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 RiskMate. Dhruv R S.</p>
+    </footer>
+
+    <script>
+        // Fraud Detection Form Submission
+        document.getElementById('fraudForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const inputData = JSON.parse(document.getElementById('fraud-input').value);
+
+                const response = await fetch('/predict_fraud', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('fraud-result').innerText = data.fraud
+                        ? "🚨 Fraudulent Transaction Detected"
+                        : "✅ Transaction is Legitimate";
+                } else {
+                    document.getElementById('fraud-result').innerText = `Error: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('fraud-result').innerText = "Error analyzing transaction.";
+            }
+        });
+
+        // Credit Scoring Form Submission
+        document.getElementById('creditForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const inputData = JSON.parse(document.getElementById('credit-input').value);
+
+                const response = await fetch('/credit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('credit-result').innerText = `💳 Credit Score: ${data.credit_score}`;
+                } else {
+                    document.getElementById('credit-result').innerText = `Error: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('credit-result').innerText = "Error fetching credit score.";
+            }
+        });
+    </script>
+</body>
+</html>
